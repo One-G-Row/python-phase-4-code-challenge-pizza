@@ -92,12 +92,13 @@ def restaurant_pizzas():
     
     if request.method == 'POST':
         data = request.get_json()
+    
         if not data.get('price') or not data.get('pizza_id') or not data.get('restaurant_id'):
             response_body = {
                 "errors": ["validation errors"]
             }
             response = make_response(jsonify(response_body), 400)
-            return response
+            return response 
         try:
             new_restaurant_pizza = RestaurantPizza(
                 price = data['price'],
@@ -106,7 +107,6 @@ def restaurant_pizzas():
             )
             db.session.add(new_restaurant_pizza)
             db.session.commit()
-
             restaurant_pizzas_dict = new_restaurant_pizza.to_dict()
             response = make_response(jsonify(restaurant_pizzas_dict), 201)
             return response 
