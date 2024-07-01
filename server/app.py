@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from models import db, Restaurant, RestaurantPizza, Pizza
 from flask_migrate import Migrate
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, jsonify
 from flask_restful import Api, Resource
 import os
 
@@ -23,7 +23,89 @@ api = Api(app)
 @app.route("/")
 def index():
     return "<h1>Code challenge</h1>"
+@app.route('/restaurants')
+def restaurants():
+    restaurants = [restaurant.to_dict() for restaurant in Restaurant.query.all()]
+    response = make_response(restaurants, 200)
+    return response
 
+@app.route('/restaurants/<int:id>')
+def restaurant_by_id(id):
+    restaurant = Restaurant.query.filter(Restaurant.id == id).first()
+    restaurant_dict = restaurant.to_dict()
+    response = make_response(restaurant_dict, 200)
+    return response
+
+@app.route('/restaurants/<int:id>', methods = ['GET','DELETE'])
+def delete_restaurant_by_id(id):
+    restaurant = Restaurant.query.filter(Restaurant.id == id).first()
+
+    if restaurant == None:
+        response_body = {
+            "message": "This record does not exist in our database. Please try again."
+        }
+        response = make_response(response_body, 404)
+
+        return response
+    
+    else:
+        if request.method == 'GET':
+            restaurant_dict = restaurant.to_dict()
+            response = make_response(restaurant_dict, 200)
+            return response
+        
+        elif request.method == 'DELETE':
+            db.session.delete(restaurant)
+            db.session.commit()
+
+        response_body = {
+        "delete_successful": True,
+        "message": "Restaurant deleted."
+        }
+
+        response = make_response(response_body, 200)
+        return response
+    
+@app.route('/pizzas')
+def pizzas():
+    pizzas = [pizza.to_dict() for pizza in Pizza.query.all()]
+    response = make_response(pizzas, 200)
+    return response
+
+@app.route('/restaurant_pizzas', methods = ['GET','POST'])
+def restaurant_pizzas():
+    restaurant_pizzas = [restaurant_pizza.to_dict() for restaurant_pizza in RestaurantPizza.query.all()]
+    
+    if restaurant_pizzas == 'NONE':
+        response_body = {
+            "errors": ["validation errors"]
+        }
+        response = make_response(response_body, 404)
+
+        return response 
+    
+    if request.method == 'GET':
+            for restaurant_pizza in RestaurantPizza.query.all():
+                restaurant_pizza_dict = restaurant_pizza.to_dict()
+                response = make_response(restaurant_pizza_dict, 200)
+                return response
+    
+    if request.method == 'POST':
+            data = request.get_json()
+            new_restaurant_pizza = RestaurantPizza(
+                price = data.get('price'),
+                pizza_id = data.get('pizza_id'),
+                restaurant_id = data.get('restaurant_id')
+            )
+        
+            db.session.add(new_restaurant_pizza)
+            db.session.commit()
+
+            restaurant_pizzas_dict = new_restaurant_pizza.to_dict()
+            response = make_response(restaurant_pizzas_dict, 201)
+            return response 
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
+
+
