@@ -23,24 +23,24 @@ api = Api(app)
 @app.route("/")
 def index():
     return "<h1>Code challenge</h1>"
-@app.route('/restaurants')
+@app.route('/restaurants', methods=['GET'])
 def restaurants():
     restaurants = [restaurant.to_dict() for restaurant in Restaurant.query.all()]
     response = make_response(jsonify(restaurants), 200)
     return response
-
+""" 
 @app.route('/restaurants/<int:id>')
 def restaurant_by_id(id):
     restaurant = Restaurant.query.filter(Restaurant.id == id).first()
     restaurant_dict = restaurant.to_dict()
     response = make_response(jsonify(restaurant_dict), 200)
-    return response
+    return response """
 
 @app.route('/restaurants/<int:id>', methods = ['GET','DELETE'])
-def delete_restaurant_by_id(id):
+def restaurant_by_id(id):
     restaurant = Restaurant.query.filter(Restaurant.id == id).first()
-
-    if restaurant == None:
+       
+    if restaurant == 'None':
         response_body = {
             "message": "This record does not exist in our database. Please try again."
         }
@@ -48,12 +48,11 @@ def delete_restaurant_by_id(id):
 
         return response
     
-    
     if request.method == 'GET':
             restaurant_dict = restaurant.to_dict()
             response = make_response(jsonify(restaurant_dict), 200)
             return response
-        
+
     if request.method == 'DELETE':
             db.session.delete(restaurant)
             db.session.commit()
@@ -63,10 +62,10 @@ def delete_restaurant_by_id(id):
             "message": "Restaurant deleted."
              }
 
-            response = make_response(jsonify(response_body), 200)
+            response = make_response(jsonify(response_body), 204)
             return response
     
-@app.route('/pizzas')
+@app.route('/pizzas', methods=['GET'])
 def pizzas():
     pizzas = [pizza.to_dict() for pizza in Pizza.query.all()]
     response = make_response(jsonify(pizzas), 200)
